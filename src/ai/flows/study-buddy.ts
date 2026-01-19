@@ -28,7 +28,8 @@ Your goal is to help the user learn about a topic of their choice.
 
     const chatHistory = history.slice();
     // The Gemini API requires the history to start with a 'user' message.
-    // If the first message is an 'assistant' message, we remove it.
+    // If the first message is an 'assistant' message, we remove it to ensure
+    // the history is in the correct format.
     if (chatHistory.length > 0 && chatHistory[0].role === 'assistant') {
       chatHistory.shift();
     }
