@@ -33,22 +33,24 @@ Your goal is to help the user learn about a topic of their choice.
       chatHistory.shift();
     }
 
+    const lastMessage = chatHistory.pop();
+    if (!lastMessage || lastMessage.role !== 'user') {
+      // This should not happen in a normal flow, but it's a good safeguard.
+      throw new Error('Could not find a user message to respond to.');
+    }
+
     const formattedHistory = chatHistory.map((msg) => ({
       role: msg.role === 'user' ? ('user' as const) : ('model' as const),
       content: [{ text: msg.content }],
     }));
 
-    try {
-      const response = await ai.generate({
-        system: systemPrompt,
-        history: formattedHistory,
-      });
+    const response = await ai.generate({
+      system: systemPrompt,
+      prompt: lastMessage.content,
+      history: formattedHistory,
+    });
 
-      return response.text;
-    } catch (e) {
-      console.error('Error generating response from AI:', e);
-      throw e;
-    }
+    return response.text;
   }
 );
 
