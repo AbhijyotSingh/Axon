@@ -26,8 +26,6 @@ Your goal is to help the user learn about a topic of their choice.
 - Do not just give out answers. Guide the user to discover the answers themselves.
 - Start the conversation by asking what the user wants to learn, unless they have already stated it.`;
 
-    const model = ai.model();
-
     const formattedHistory = history.map((msg) => ({
       role: msg.role === 'user' ? ('user' as const) : ('model' as const),
       content: [{ text: msg.content }],
@@ -35,8 +33,7 @@ Your goal is to help the user learn about a topic of their choice.
 
     try {
       const response = await ai.generate({
-        model: model,
-        prompt: systemPrompt,
+        system: systemPrompt,
         history: formattedHistory,
       });
 
