@@ -46,7 +46,7 @@ export async function generateResponse(
       errorString.includes('ResourceExhausted')
     ) {
       userMessage =
-        'You have exceeded your API quota. Please check your Gemini account or try again later.';
+        'You are sending requests too quickly. Please wait a moment and try again.';
       isAuthError = true;
     }
 
