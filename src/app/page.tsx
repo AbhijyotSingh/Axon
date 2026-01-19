@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/common/logo';
 import { ApiKeyForm } from '@/components/chat/api-key-form';
 import { ChatView, type Message } from '@/components/chat/chat-view';
+import { ThemeToggle } from '@/components/common/theme-toggle';
 
 const API_KEY_SESSION_STORAGE_KEY = 'gemini_api_key';
 
@@ -79,11 +80,14 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center min-h-screen p-4 md:p-8">
       <header className="w-full max-w-3xl mb-8">
-        <div className="flex items-center gap-4">
-          <Logo />
-          <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
-            AI Study Buddy
-          </h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Logo />
+            <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
+              AI Study Buddy
+            </h1>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
       <main className="w-full flex-1 flex flex-col items-center">
