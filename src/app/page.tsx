@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { checkApiKey, saveApiKey, generateResponse, deleteApiKey } from './actions';
+import { generateResponse } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/common/logo';
 import { ApiKeyForm } from '@/components/chat/api-key-form';
 import { ChatView, type Message } from '@/components/chat/chat-view';
 
+const API_KEY_SESSION_STORAGE_KEY = 'gemini_api_key';
+
 export default function Home() {
-  const [hasApiKey, setHasApiKey] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
 
@@ -16,62 +18,61 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkKey = async () => {
-      const hasKey = await checkApiKey();
-      setHasApiKey(hasKey);
-      if (hasKey) {
-        setMessages([
-          { role: 'assistant', content: 'What do you want to learn?' },
-        ]);
-      }
-      setIsLoading(false);
-    };
-    checkKey();
-  }, []);
-
-  const handleSaveApiKey = async (apiKey: string) => {
-    const result = await saveApiKey(apiKey);
-    if (result.success) {
-      setHasApiKey(true);
+    const storedKey = sessionStorage.getItem(API_KEY_SESSION_STORAGE_KEY);
+    if (storedKey) {
+      setApiKey(storedKey);
       setMessages([
         { role: 'assistant', content: 'What do you want to learn?' },
       ]);
-      toast({
-        title: 'Success',
-        description: 'API Key saved successfully.',
-      });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: result.error,
-      });
     }
+    setIsLoading(false);
+  }, []);
+
+  const handleSaveApiKey = (newApiKey: string) => {
+    sessionStorage.setItem(API_KEY_SESSION_STORAGE_KEY, newApiKey);
+    setApiKey(newApiKey);
+    setMessages([{ role: 'assistant', content: 'What do you want to learn?' }]);
+    toast({
+      title: 'Success',
+      description: 'API Key saved for this session.',
+    });
   };
 
   const handleSendMessage = async (content: string) => {
+    if (!apiKey) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'API key not provided.',
+      });
+      return;
+    }
+
     const newMessages: Message[] = [...messages, { role: 'user', content }];
     setMessages(newMessages);
     setIsResponding(true);
 
-    const result = await generateResponse(newMessages);
-    
+    const result = await generateResponse(newMessages, apiKey);
+
     setIsResponding(false);
-    
+
     if (result.error) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'An error occurred',
         description: result.error,
       });
 
-      if(result.isAuthError) {
-        await deleteApiKey();
-        setHasApiKey(false);
+      if (result.isAuthError) {
+        sessionStorage.removeItem(API_KEY_SESSION_STORAGE_KEY);
+        setApiKey(null);
         setMessages([]);
       }
     } else if (result.response) {
-      setMessages([...newMessages, { role: 'assistant', content: result.response }]);
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: result.response },
+      ]);
     }
   };
 
@@ -91,7 +92,7 @@ export default function Home() {
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
-          ) : hasApiKey ? (
+          ) : apiKey ? (
             <ChatView
               messages={messages}
               isResponding={isResponding}

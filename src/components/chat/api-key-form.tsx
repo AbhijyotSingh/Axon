@@ -31,7 +31,7 @@ const apiKeySchema = z.object({
 type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
 
 interface ApiKeyFormProps {
-  onSave: (apiKey: string) => Promise<void>;
+  onSave: (apiKey: string) => void;
 }
 
 export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
@@ -43,10 +43,9 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
     },
   });
 
-  const onSubmit = async (data: ApiKeyFormValues) => {
+  const onSubmit = (data: ApiKeyFormValues) => {
     setIsSubmitting(true);
-    await onSave(data.apiKey);
-    setIsSubmitting(false);
+    onSave(data.apiKey);
   };
 
   return (
