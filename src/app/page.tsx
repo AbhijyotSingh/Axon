@@ -39,6 +39,16 @@ export default function Home() {
     });
   };
 
+  const handleResetApiKey = () => {
+    sessionStorage.removeItem(API_KEY_SESSION_STORAGE_KEY);
+    setApiKey(null);
+    setMessages([]);
+    toast({
+      title: 'API Key Cleared',
+      description: 'Please enter a new API key to continue.',
+    });
+  };
+
   const handleSendMessage = async (content: string) => {
     if (!apiKey) {
       toast({
@@ -83,9 +93,11 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Logo />
-            <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
-              AI Study Buddy
-            </h1>
+            <button onClick={handleResetApiKey} className="text-left">
+              <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
+                AI Study Buddy
+              </h1>
+            </button>
           </div>
           <ThemeToggle />
         </div>
