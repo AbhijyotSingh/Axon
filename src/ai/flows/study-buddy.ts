@@ -29,11 +29,6 @@ Your goal is to help the user learn about a topic of their choice.
     const latestUserMessage = history[history.length - 1];
     const conversationHistory = history.slice(0, -1);
 
-    // The Gemini API requires the history to start with a 'user' message.
-    if (conversationHistory.length > 0 && conversationHistory[0].role === 'assistant') {
-      conversationHistory.shift();
-    }
-
     const formattedHistory = conversationHistory.map((msg) => ({
       role: msg.role === 'user' ? ('user' as const) : ('model' as const),
       content: [{ text: msg.content }],

@@ -63,7 +63,13 @@ export default function Home() {
     setMessages(newMessages);
     setIsResponding(true);
 
-    const result = await generateResponse(newMessages, apiKey);
+    // Filter out the initial assistant message before sending to the backend
+    const historyForAi = newMessages.filter((msg, index) => {
+      // If it's the very first message and it's from the assistant, exclude it.
+      return !(index === 0 && msg.role === 'assistant');
+    });
+
+    const result = await generateResponse(historyForAi, apiKey);
 
     setIsResponding(false);
 
