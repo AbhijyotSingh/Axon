@@ -47,7 +47,7 @@ export async function generateResponse(
     ) {
       userMessage =
         'You are sending requests too quickly. Please wait a moment and try again.';
-      isAuthError = true;
+      isAuthError = false;
     }
 
     return { error: userMessage, isAuthError };
