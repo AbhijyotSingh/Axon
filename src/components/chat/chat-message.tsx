@@ -25,10 +25,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
       )}
       <div
         className={cn(
-          'p-3 rounded-2xl max-w-[80%] shadow-md whitespace-pre-wrap',
+          'p-3 rounded-xl max-w-[80%] whitespace-pre-wrap',
           isUser
             ? 'bg-primary text-primary-foreground rounded-br-none'
-            : 'bg-card text-card-foreground rounded-bl-none'
+            : 'bg-card text-card-foreground rounded-bl-none border'
         )}
       >
         <p className="text-sm">{message.content}</p>

@@ -39,7 +39,7 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Ask a question or start a new topic..."
-        className="flex-1 resize-none rounded-full border-2 border-input py-2 px-4 shadow-inner focus-visible:ring-primary"
+        className="flex-1 resize-none rounded-full border border-input py-2 px-4 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
         rows={1}
         disabled={isResponding}
         aria-label="Chat input"

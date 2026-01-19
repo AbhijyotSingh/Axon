@@ -49,7 +49,7 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
   };
 
   return (
-    <Card className="w-full shadow-lg">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="font-headline text-primary">
           Welcome to Study Buddy

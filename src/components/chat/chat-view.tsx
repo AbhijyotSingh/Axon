@@ -35,7 +35,7 @@ export function ChatView({
   }, [messages, isResponding]);
 
   return (
-    <Card className="w-full h-full flex flex-col shadow-xl">
+    <Card className="w-full h-full flex flex-col">
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <CardContent className="p-4 md:p-6">
           {messages.map((message, index) => (
@@ -46,7 +46,7 @@ export function ChatView({
               <div className="h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                 <Bot className="h-5 w-5" />
               </div>
-              <div className="p-3 rounded-2xl rounded-bl-none bg-card text-card-foreground shadow-md">
+              <div className="p-3 rounded-xl rounded-bl-none bg-card text-card-foreground border">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.3s]"></span>
                   <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.15s]"></span>
