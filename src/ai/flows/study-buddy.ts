@@ -26,20 +26,21 @@ Your goal is to help the user learn about a topic of their choice.
 - Do not just give out answers. Guide the user to discover the answers themselves.
 - Start the conversation by asking what the user wants to learn, unless they have already stated it.`;
 
-    const chatHistory = history.slice();
+    const latestUserMessage = history[history.length - 1];
+    const conversationHistory = history.slice(0, -1);
+
     // The Gemini API requires the history to start with a 'user' message.
-    // If the first message is an 'assistant' message, we remove it to ensure
-    // the history is in the correct format.
-    if (chatHistory.length > 0 && chatHistory[0].role === 'assistant') {
-      chatHistory.shift();
+    if (conversationHistory.length > 0 && conversationHistory[0].role === 'assistant') {
+      conversationHistory.shift();
     }
 
-    const formattedHistory = chatHistory.map((msg) => ({
+    const formattedHistory = conversationHistory.map((msg) => ({
       role: msg.role === 'user' ? ('user' as const) : ('model' as const),
       content: [{ text: msg.content }],
     }));
 
     const response = await ai.generate({
+      prompt: latestUserMessage.content,
       system: systemPrompt,
       history: formattedHistory,
     });
