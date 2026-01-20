@@ -24,28 +24,30 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-const apiKeySchema = z.object({
+const loginSchema = z.object({
+  username: z.string().min(1, 'Username is required.'),
   apiKey: z.string().min(1, 'API Key is required.'),
 });
 
-type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface ApiKeyFormProps {
-  onSave: (apiKey: string) => void;
+  onSave: (username: string, apiKey: string) => void;
 }
 
 export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const form = useForm<ApiKeyFormValues>({
-    resolver: zodResolver(apiKeySchema),
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
+      username: '',
       apiKey: '',
     },
   });
 
-  const onSubmit = (data: ApiKeyFormValues) => {
+  const onSubmit = (data: LoginFormValues) => {
     setIsSubmitting(true);
-    onSave(data.apiKey);
+    onSave(data.username, data.apiKey);
   };
 
   return (
@@ -55,12 +57,28 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
           Welcome to Study Buddy
         </CardTitle>
         <CardDescription>
-          Please enter your Gemini API key to continue learning.
+          Please enter a username and your Gemini API key to start learning. Your chat history will not be saved.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <CardContent className="space-y-4 pb-0">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your username"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="apiKey"
@@ -84,7 +102,7 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
               {isSubmitting ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
               ) : (
-                'Save and Start Learning'
+                'Start Learning'
               )}
             </Button>
           </CardFooter>
