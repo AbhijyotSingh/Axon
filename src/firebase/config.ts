@@ -1,7 +1,8 @@
-// IMPORTANT: This file is populated with your Firebase project's configuration.
+// IMPORTANT: This file uses environment variables to configure Firebase.
+// Make sure you have a .env file with your Firebase project's configuration.
 
 export const firebaseConfig = {
-  apiKey: 'AIzaSyDtO3Bf_gtzDJ3m9PA3_sn1sK8GuwfRxlA',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: 'studio-375537427.firebaseapp.com',
   projectId: 'studio-375537427',
   storageBucket: 'studio-375537427.appspot.com',

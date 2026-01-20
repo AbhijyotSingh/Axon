@@ -11,11 +11,11 @@ type Message = {
 export async function generateResponse(
   history: Message[]
 ): Promise<{ response?: string; error?: string; isAuthError?: boolean }> {
-  if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === 'YOUR_API_KEY_HERE') {
+  if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === 'YOUR_API_KEY_HERE' || process.env.GOOGLE_API_KEY.includes('PASTE_YOUR')) {
     return {
       error:
-        'The Gemini API key is not configured on the backend. Please set the GOOGLE_API_KEY environment variable in the .env file.',
-      isAuthError: true,
+        'The Gemini API key is not configured on the backend. Please contact the application administrator.',
+      isAuthError: false, // This is a backend config error, not a user auth error.
     };
   }
 
@@ -27,21 +27,20 @@ export async function generateResponse(
     let userMessage = 'An unexpected error occurred while talking to the AI.';
     let isAuthError = false;
 
-    // Crude error inspection for Gemini API errors wrapped by Genkit
     const errorString = e.toString();
     if (
       errorString.includes('400') ||
       errorString.includes('API key not valid')
     ) {
       userMessage =
-        'The backend Gemini API key is invalid or expired. Please check the environment configuration.';
-      isAuthError = true;
+        'The Gemini API key on the backend is invalid or expired. Please contact the application administrator.';
+      isAuthError = false; // This is a backend config error, not a user auth error.
     } else if (
       errorString.includes('429') ||
       errorString.includes('ResourceExhausted')
     ) {
       userMessage =
-        'The application is sending requests too quickly. Please wait a moment and try again.';
+        'The AI is receiving too many requests. Please wait a moment and try again.';
       isAuthError = false;
     }
 

@@ -26,6 +26,10 @@ export function initializeFirebase(): FirebaseServices {
     if (services) {
         return services;
     }
+    
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('PASTE_YOUR_FIREBASE')) {
+        throw new Error('Firebase API Key is missing. Please add NEXT_PUBLIC_FIREBASE_API_KEY to your .env file.');
+    }
 
     const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
     const auth = getAuth(app);
