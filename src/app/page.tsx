@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser, useFirestore, useAuth } from '@/firebase';
 import { generateResponse } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/common/logo';
-import { ApiKeyForm } from '@/components/chat/api-key-form';
 import { ChatView, type Message } from '@/components/chat/chat-view';
 import { ThemeToggle } from '@/components/common/theme-toggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -17,56 +18,96 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
+import { LogOut, PlusCircle } from 'lucide-react';
+import {
+  getChatsListener,
+  createChatSession,
+  updateChatSession,
+  type ChatSession,
+} from '@/firebase/firestore/chats';
+import { signOutUser } from '@/firebase/auth/auth';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const USERNAME_SESSION_STORAGE_KEY = 'study_buddy_username';
 
 export default function Home() {
-  const [username, setUsername] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading: isUserLoading } = useUser();
+  const router = useRouter();
+  const firestore = useFirestore();
+  const auth = useAuth();
+  
   const [isResponding, setIsResponding] = useState(false);
-
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedUsername = sessionStorage.getItem(USERNAME_SESSION_STORAGE_KEY);
-    if (storedUsername) {
-      setUsername(storedUsername);
-      setMessages([
-        { role: 'assistant', content: `Hi ${storedUsername}! What do you want to learn?` },
-      ]);
+    if (!isUserLoading && !user) {
+      router.push('/login');
     }
-    setIsLoading(false);
-  }, []);
+  }, [user, isUserLoading, router]);
 
-  const handleLogin = (newUsername: string) => {
-    sessionStorage.setItem(USERNAME_SESSION_STORAGE_KEY, newUsername);
-    setUsername(newUsername);
-    setMessages([{ role: 'assistant', content: `Hi ${newUsername}! What do you want to learn?` }]);
-    toast({
-      title: 'Success',
-      description: 'You are now logged in for this session.',
-    });
-  };
+  useEffect(() => {
+    if (user && firestore) {
+      const unsubscribe = getChatsListener(firestore, user.uid, (sessions) => {
+        setChatSessions(sessions);
+        if (sessions.length > 0 && !activeChatId) {
+            const latestSession = sessions[0];
+            setActiveChatId(latestSession.id);
+            setMessages(latestSession.history);
+        } else if (sessions.length === 0) {
+            handleNewChat();
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [user, firestore]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem(USERNAME_SESSION_STORAGE_KEY);
-    setUsername(null);
-    setMessages([]);
-    toast({
-      title: 'Logged Out',
-      description: 'Please log in to start a new session.',
-    });
+  const handleLogout = async () => {
+    try {
+        await signOutUser(auth);
+        router.push('/login');
+        toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Logout Failed', description: error.message });
+    }
   };
+  
+  const handleNewChat = async () => {
+    if (!user || !firestore) return;
+    createChatSession(firestore, user.uid);
+    setMessages([{ role: 'assistant', content: "Hi there! What would you like to learn about today?" }]);
+    setActiveChatId(null); 
+  }
+  
+  const handleSelectChat = (chatId: string) => {
+    const session = chatSessions.find(s => s.id === chatId);
+    if (session) {
+      setActiveChatId(session.id);
+      setMessages(session.history.length > 0 ? session.history : [{ role: 'assistant', content: "Hi there! What would you like to learn about today?" }]);
+    }
+  }
 
   const handleSendMessage = async (content: string) => {
+    if (!activeChatId || !user || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'No active chat session.' });
+        return;
+    }
+
     const newMessages: Message[] = [...messages, { role: 'user', content }];
     setMessages(newMessages);
     setIsResponding(true);
 
     const historyForAi = newMessages.filter((msg, index) => {
-        return !(index === 0 && msg.role === 'assistant');
+        const isFirstAssistantMessage = index === 0 && msg.role === 'assistant';
+        return !isFirstAssistantMessage;
     });
 
     const result = await generateResponse(historyForAi);
@@ -79,17 +120,25 @@ export default function Home() {
         title: 'An error occurred',
         description: result.error,
       });
-
-      // We don't log out on auth error anymore, as the key is on the backend.
     } else if (result.response) {
-      setMessages([
+      const finalMessages = [
         ...newMessages,
         { role: 'assistant', content: result.response },
-      ]);
+      ];
+      setMessages(finalMessages);
+      updateChatSession(firestore, user.uid, activeChatId, finalMessages);
     }
   };
-  
-  const isLoggedIn = !!username;
+
+  if (isUserLoading || !user) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      );
+  }
+
+  const userEmail = user.email || 'User';
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 md:p-8">
@@ -97,60 +146,66 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Logo />
-            <button onClick={handleLogout} className="text-left">
-              <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
+            <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
                 AI Study Buddy
-              </h1>
-            </button>
+            </h1>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {isLoggedIn && username && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{username}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        Logged in
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {userEmail.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userEmail}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      Logged in
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+        <div className="flex items-center justify-between mt-4 w-full">
+            <Select onValueChange={handleSelectChat} value={activeChatId || ''}>
+                <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Select a chat" />
+                </SelectTrigger>
+                <SelectContent>
+                    {chatSessions.map(session => (
+                        <SelectItem key={session.id} value={session.id}>
+                            Chat from {new Date(session.createdAt?.toDate()).toLocaleString()}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={handleNewChat}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Chat
+            </Button>
+        </div>
       </header>
-      <main className="w-full flex-1 flex flex-col items-center">
+      <main className="w-full flex-1 flex flex-col items-center mt-4">
         <div className="w-full max-w-3xl flex-1">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-          ) : isLoggedIn ? (
-            <ChatView
-              messages={messages}
-              isResponding={isResponding}
-              onSendMessage={handleSendMessage}
-            />
-          ) : (
-            <ApiKeyForm onSave={handleLogin} />
-          )}
+          <ChatView
+            messages={messages}
+            isResponding={isResponding}
+            onSendMessage={handleSendMessage}
+          />
         </div>
       </main>
     </div>
