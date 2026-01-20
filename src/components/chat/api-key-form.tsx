@@ -26,6 +26,7 @@ import {
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required.'),
+  password: z.string().min(1, 'Password is required.'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -40,11 +41,13 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: '',
+      password: '',
     },
   });
 
   const onSubmit = (data: LoginFormValues) => {
     setIsSubmitting(true);
+    // NOTE: Password is not used, this is a mock login for UI purposes.
     onSave(data.username);
   };
 
@@ -55,7 +58,7 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
           Welcome to Study Buddy
         </CardTitle>
         <CardDescription>
-          Please enter a username to start learning. Your chat history will not be saved.
+          Please enter your credentials to start learning. Your chat history will not be saved.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -70,6 +73,23 @@ export function ApiKeyForm({ onSave }: ApiKeyFormProps) {
                   <FormControl>
                     <Input
                       placeholder="Enter your username"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Enter your password"
                       {...field}
                     />
                   </FormControl>
