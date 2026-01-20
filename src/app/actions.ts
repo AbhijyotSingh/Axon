@@ -9,20 +9,15 @@ type Message = {
 };
 
 export async function generateResponse(
-  history: Message[],
-  apiKey: string
+  history: Message[]
 ): Promise<{ response?: string; error?: string; isAuthError?: boolean }> {
-  if (!apiKey) {
+  if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === 'YOUR_API_KEY_HERE') {
     return {
-      error: 'API key not found. Please enter your key to begin.',
+      error:
+        'The Gemini API key is not configured on the backend. Please set the GOOGLE_API_KEY environment variable in the .env file.',
       isAuthError: true,
     };
   }
-
-  // Temporarily set the API key as an environment variable for Genkit to use.
-  // This is a workaround due to Genkit's configuration model and the per-user key requirement.
-  const originalApiKey = process.env.GOOGLE_API_KEY;
-  process.env.GOOGLE_API_KEY = apiKey;
 
   try {
     const response = await studyBuddy(history);
@@ -39,20 +34,17 @@ export async function generateResponse(
       errorString.includes('API key not valid')
     ) {
       userMessage =
-        'Your Gemini API key is invalid or expired. Please enter a valid key.';
+        'The backend Gemini API key is invalid or expired. Please check the environment configuration.';
       isAuthError = true;
     } else if (
       errorString.includes('429') ||
       errorString.includes('ResourceExhausted')
     ) {
       userMessage =
-        'You are sending requests too quickly. Please wait a moment and try again.';
+        'The application is sending requests too quickly. Please wait a moment and try again.';
       isAuthError = false;
     }
 
     return { error: userMessage, isAuthError };
-  } finally {
-    // Restore the original environment variable state
-    process.env.GOOGLE_API_KEY = originalApiKey;
   }
 }

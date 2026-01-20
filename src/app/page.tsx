@@ -19,11 +19,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut } from 'lucide-react';
 
-const API_KEY_SESSION_STORAGE_KEY = 'gemini_api_key';
 const USERNAME_SESSION_STORAGE_KEY = 'study_buddy_username';
 
 export default function Home() {
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
@@ -32,10 +30,8 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedKey = sessionStorage.getItem(API_KEY_SESSION_STORAGE_KEY);
     const storedUsername = sessionStorage.getItem(USERNAME_SESSION_STORAGE_KEY);
-    if (storedKey && storedUsername) {
-      setApiKey(storedKey);
+    if (storedUsername) {
       setUsername(storedUsername);
       setMessages([
         { role: 'assistant', content: `Hi ${storedUsername}! What do you want to learn?` },
@@ -44,11 +40,9 @@ export default function Home() {
     setIsLoading(false);
   }, []);
 
-  const handleLogin = (newUsername: string, newApiKey: string) => {
+  const handleLogin = (newUsername: string) => {
     sessionStorage.setItem(USERNAME_SESSION_STORAGE_KEY, newUsername);
-    sessionStorage.setItem(API_KEY_SESSION_STORAGE_KEY, newApiKey);
     setUsername(newUsername);
-    setApiKey(newApiKey);
     setMessages([{ role: 'assistant', content: `Hi ${newUsername}! What do you want to learn?` }]);
     toast({
       title: 'Success',
@@ -57,9 +51,7 @@ export default function Home() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(API_KEY_SESSION_STORAGE_KEY);
     sessionStorage.removeItem(USERNAME_SESSION_STORAGE_KEY);
-    setApiKey(null);
     setUsername(null);
     setMessages([]);
     toast({
@@ -69,15 +61,6 @@ export default function Home() {
   };
 
   const handleSendMessage = async (content: string) => {
-    if (!apiKey) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'API key not provided.',
-      });
-      return;
-    }
-
     const newMessages: Message[] = [...messages, { role: 'user', content }];
     setMessages(newMessages);
     setIsResponding(true);
@@ -86,7 +69,7 @@ export default function Home() {
         return !(index === 0 && msg.role === 'assistant');
     });
 
-    const result = await generateResponse(historyForAi, apiKey);
+    const result = await generateResponse(historyForAi);
 
     setIsResponding(false);
 
@@ -97,9 +80,7 @@ export default function Home() {
         description: result.error,
       });
 
-      if (result.isAuthError) {
-        handleLogout();
-      }
+      // We don't log out on auth error anymore, as the key is on the backend.
     } else if (result.response) {
       setMessages([
         ...newMessages,
@@ -108,7 +89,7 @@ export default function Home() {
     }
   };
   
-  const isLoggedIn = !!(apiKey && username);
+  const isLoggedIn = !!username;
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 md:p-8">
@@ -124,7 +105,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            {isLoggedIn && (
+            {isLoggedIn && username && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
