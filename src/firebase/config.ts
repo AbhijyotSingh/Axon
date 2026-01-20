@@ -1,7 +1,7 @@
 // IMPORTANT: This file is populated with your Firebase project's configuration.
 
 export const firebaseConfig = {
-  apiKey: 'AIzaSyBP_9rDoJ5K9X-p9p_yB7zOq4t4b8g3xYw',
+  apiKey: 'AIzaSyDtO3Bf_gtzDJ3m9PA3_sn1sK8GuwfRxlA',
   authDomain: 'studio-375537427.firebaseapp.com',
   projectId: 'studio-375537427',
   storageBucket: 'studio-375537427.appspot.com',
