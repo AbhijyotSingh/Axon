@@ -10,6 +10,8 @@ import { ThemeToggle } from '@/components/common/theme-toggle';
 import { UsernameForm } from '@/components/common/username-form';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 
 // A simple, insecure, mock user database stored in local storage.
 // DO NOT use this in production.
@@ -29,8 +31,11 @@ export default function Home() {
   const [isResponding, setIsResponding] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // This ensures the form is only rendered on the client, avoiding hydration errors.
+    setIsClient(true);
     // Check if user is logged in on component mount
     const storedUser = localStorage.getItem('current_user');
     if (storedUser) {
@@ -167,7 +172,27 @@ export default function Home() {
                 </div>
             </header>
             <main className="w-full max-w-xs">
-                <UsernameForm onLogin={handleLogin} />
+                {isClient ? <UsernameForm onLogin={handleLogin} /> : (
+                  <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">
+                    <CardHeader className="text-center">
+                      <Skeleton className="h-8 w-32 mx-auto" />
+                      <Skeleton className="h-4 w-48 mx-auto mt-2" />
+                    </CardHeader>
+                     <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                           <Skeleton className="h-4 w-20" />
+                           <Skeleton className="h-10 w-full" />
+                        </div>
+                        <div className="space-y-2">
+                           <Skeleton className="h-4 w-20" />
+                           <Skeleton className="h-10 w-full" />
+                        </div>
+                     </CardContent>
+                     <CardFooter>
+                       <Skeleton className="h-10 w-full" />
+                     </CardFooter>
+                  </Card>
+                )}
             </main>
       </div>
     )
