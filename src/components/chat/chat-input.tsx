@@ -65,7 +65,7 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
       )}
       <form
         onSubmit={handleSubmit}
-        className="flex w-full items-start gap-2"
+        className="flex w-full items-center gap-2"
       >
         <input
           type="file"
@@ -90,7 +90,7 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={attachment ? 'Add a comment to your file...' : 'Ask a question or start a new topic...'}
-          className="flex-1 resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
+          className="flex-1 resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-0 h-12"
           rows={1}
           disabled={isResponding}
           aria-label="Chat input"
