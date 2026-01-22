@@ -161,9 +161,9 @@ export default function Home() {
                 <div className="flex flex-col items-center gap-4">
                     <Logo />
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary animate-fade-in-down">
-                        AI Study Buddy
+                        Axon
                     </h1>
-                    <p className="text-muted-foreground animate-fade-in-up">Your personal AI tutor, ready to help.</p>
+                    <p className="text-muted-foreground animate-fade-in-up">Your personal AI learning companion.</p>
                 </div>
             </header>
             <main className="w-full max-w-xs">
@@ -181,7 +181,7 @@ export default function Home() {
             <Logo />
             <div >
                 <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
-                    AI Study Buddy
+                    Axon
                 </h1>
                 <p className="text-sm text-muted-foreground">Welcome back, {currentUser.username}!</p>
             </div>

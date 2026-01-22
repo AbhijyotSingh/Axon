@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'AI Study Buddy',
-  description: 'Your personal AI tutor for any subject.',
+  title: 'Axon',
+  description: 'Your personal AI learning companion.',
 };
 
 export default function RootLayout({

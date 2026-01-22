@@ -8,7 +8,7 @@ const MessageSchema = z.object({
   content: z.string(),
 });
 
-const StudyBuddyInputSchema = z.object({
+const AxonInputSchema = z.object({
   history: z.array(MessageSchema),
   attachment: z
     .object({
@@ -20,14 +20,14 @@ const StudyBuddyInputSchema = z.object({
 
 type Message = z.infer<typeof MessageSchema>;
 
-const studyBuddyFlow = ai.defineFlow(
+const axonFlow = ai.defineFlow(
   {
-    name: 'studyBuddyFlow',
-    inputSchema: StudyBuddyInputSchema,
+    name: 'axonFlow',
+    inputSchema: AxonInputSchema,
     outputSchema: z.string(),
   },
   async ({ history, attachment }) => {
-    const systemPrompt = `You are a personalized AI Tutor named Study Buddy.
+    const systemPrompt = `You are a personalized AI Tutor named Axon.
 Your goal is to help the user learn about a topic of their choice.
 It is crucial that you remember the user's topic and the conversation history. Use the history to maintain context. For example, if a user says 'tell me more about it', you should know what 'it' is from previous messages.
 - Your primary goal is to explain concepts clearly and concisely.
@@ -74,8 +74,8 @@ It is crucial that you remember the user's topic and the conversation history. U
   }
 );
 
-export async function studyBuddy(
-  input: z.infer<typeof StudyBuddyInputSchema>
+export async function axon(
+  input: z.infer<typeof AxonInputSchema>
 ): Promise<string> {
-  return await studyBuddyFlow(input);
+  return await axonFlow(input);
 }

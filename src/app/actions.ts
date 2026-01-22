@@ -1,6 +1,6 @@
 'use server';
 
-import { studyBuddy } from '@/ai/flows/study-buddy';
+import { axon } from '@/ai/flows/study-buddy';
 
 // Type for chat messages, matching the client-side definition
 type HistoryMessage = {
@@ -27,7 +27,7 @@ export async function generateResponse(
   }
 
   try {
-    const response = await studyBuddy({
+    const response = await axon({
       history,
       attachment: attachment
         ? { dataUri: attachment.dataUri, mimeType: attachment.type }
