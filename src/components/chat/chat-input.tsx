@@ -32,14 +32,14 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-full items-center gap-2 border-t bg-background p-2"
+      className="flex w-full items-center gap-4"
     >
       <Textarea
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Ask a question or start a new topic..."
-        className="flex-1 resize-none rounded-full border border-input py-2 px-4 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
+        className="flex-1 resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0"
         rows={1}
         disabled={isResponding}
         aria-label="Chat input"
@@ -48,7 +48,7 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
         type="submit"
         size="icon"
         disabled={!inputValue.trim() || isResponding}
-        className="rounded-full bg-primary hover:bg-primary/90"
+        className="rounded-full bg-primary hover:bg-primary/90 h-12 w-12 shrink-0"
         aria-label="Send message"
       >
         <SendHorizontal className="h-5 w-5" />

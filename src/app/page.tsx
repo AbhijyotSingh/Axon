@@ -135,16 +135,17 @@ export default function Home() {
 
   if (!currentUser) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 md:p-8 bg-background">
+        <div className="flex flex-col items-center justify-center min-h-screen p-4 md:p-8 bg-gradient-to-br from-background to-secondary dark:to-card">
             <div className='absolute top-4 right-4'>
                 <ThemeToggle/>
             </div>
-            <header className="w-full max-w-sm mb-8">
-                <div className="flex flex-col items-center gap-4 text-center">
+            <header className="w-full max-w-sm mb-8 text-center">
+                <div className="flex flex-col items-center gap-4">
                     <Logo />
-                    <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary animate-fade-in-down">
                         AI Study Buddy
                     </h1>
+                    <p className="text-muted-foreground animate-fade-in-up">Your personal AI tutor, ready to help.</p>
                 </div>
             </header>
             <main className="w-full max-w-xs">
@@ -155,8 +156,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 md:p-8">
-      <header className="w-full max-w-3xl mb-8">
+    <div className="flex flex-col items-center min-h-screen p-4 md:p-8 bg-gradient-to-b from-background via-secondary to-background">
+      <header className="w-full max-w-4xl mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Logo />
@@ -164,12 +165,12 @@ export default function Home() {
                 <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
                     AI Study Buddy
                 </h1>
-                <p className="text-sm text-muted-foreground">Welcome, {currentUser.username}!</p>
+                <p className="text-sm text-muted-foreground">Welcome back, {currentUser.username}!</p>
             </div>
 
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
             </Button>
@@ -178,7 +179,7 @@ export default function Home() {
         </div>
       </header>
       <main className="w-full flex-1 flex flex-col items-center mt-4">
-        <div className="w-full max-w-3xl flex-1">
+        <div className="w-full max-w-4xl flex-1">
           <ChatView
             messages={messages}
             isResponding={isResponding}

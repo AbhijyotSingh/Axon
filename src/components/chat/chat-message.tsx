@@ -14,10 +14,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   return (
     <div
-      className={cn('flex items-start gap-3 my-4', isUser && 'justify-end')}
+      className={cn('flex items-start gap-3', isUser && 'justify-end')}
     >
       {!isUser && (
-        <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+        <Avatar className="h-8 w-8 bg-primary text-primary-foreground shrink-0">
           <AvatarFallback>
             <Bot className="h-5 w-5" />
           </AvatarFallback>
@@ -25,16 +25,16 @@ export function ChatMessage({ message }: ChatMessageProps) {
       )}
       <div
         className={cn(
-          'p-3 rounded-xl max-w-[80%] whitespace-pre-wrap',
+          'p-3 rounded-xl max-w-[80%] whitespace-pre-wrap shadow-sm',
           isUser
             ? 'bg-primary text-primary-foreground rounded-br-none'
             : 'bg-card text-card-foreground rounded-bl-none border'
         )}
       >
-        <p className="text-sm">{message.content}</p>
+        <p className="text-sm leading-relaxed">{message.content}</p>
       </div>
       {isUser && (
-        <Avatar className="h-8 w-8 bg-accent text-accent-foreground">
+        <Avatar className="h-8 w-8 bg-accent text-accent-foreground shrink-0">
           <AvatarFallback>
             <User className="h-5 w-5" />
           </AvatarFallback>

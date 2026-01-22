@@ -48,11 +48,13 @@ export function UsernameForm({ onLogin }: AuthFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Welcome!</CardTitle>
+    <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Welcome!</CardTitle>
         <CardDescription>
-          Enter your username and password. If the username doesn't exist, a new account will be created.
+          Enter a username and password to begin.
+          <br />
+          New accounts are created automatically.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
