@@ -101,20 +101,38 @@ export default function Home() {
     setMessages([]);
   };
 
-  const handleSendMessage = async (content: string) => {
-    const newMessages: Message[] = [...messages, { role: 'user', content }];
-    setMessages(newMessages);
+  const handleSendMessage = async (content: string, attachment?: File) => {
     setIsResponding(true);
 
-    const historyForAi = newMessages.filter((msg, index) => {
-      const isFirstAssistantMessage =
-        index === 0 &&
-        msg.role === 'assistant' &&
-        (msg.content.startsWith('Hi ') || msg.content.startsWith('Welcome back'));
-      return !isFirstAssistantMessage;
-    });
+    const userMessage: Message = { role: 'user', content };
+    let attachmentPayload: {dataUri: string; type: string; name: string} | undefined;
 
-    const result = await generateResponse(historyForAi);
+    if (attachment) {
+      userMessage.attachment = { name: attachment.name, type: attachment.type };
+      // Read file as data URI to send to backend
+      const dataUri = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target?.result as string);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(attachment);
+      });
+      attachmentPayload = { dataUri, type: attachment.type, name: attachment.name };
+    }
+
+    const newMessages: Message[] = [...messages, userMessage];
+    setMessages(newMessages);
+
+    const historyForAi = newMessages
+      .filter((msg, index) => {
+        const isFirstAssistantMessage =
+          index === 0 &&
+          msg.role === 'assistant' &&
+          (msg.content.startsWith('Hi ') || msg.content.startsWith('Welcome back'));
+        return !isFirstAssistantMessage;
+      })
+      .map(msg => ({ role: msg.role, content: msg.content })); // Important: strip attachment from history for AI flow
+
+    const result = await generateResponse(historyForAi, attachmentPayload);
 
     setIsResponding(false);
 

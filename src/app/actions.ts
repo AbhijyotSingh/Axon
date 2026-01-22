@@ -3,13 +3,20 @@
 import { studyBuddy } from '@/ai/flows/study-buddy';
 
 // Type for chat messages, matching the client-side definition
-type Message = {
+type HistoryMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
 
+type Attachment = {
+  dataUri: string;
+  type: string;
+  name: string;
+};
+
 export async function generateResponse(
-  history: Message[]
+  history: HistoryMessage[],
+  attachment?: Attachment
 ): Promise<{ response?: string; error?: string; isAuthError?: boolean }> {
   if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === 'YOUR_API_KEY_HERE' || process.env.GOOGLE_API_KEY.includes('PASTE_YOUR')) {
     return {
@@ -20,7 +27,12 @@ export async function generateResponse(
   }
 
   try {
-    const response = await studyBuddy(history);
+    const response = await studyBuddy({
+      history,
+      attachment: attachment
+        ? { dataUri: attachment.dataUri, mimeType: attachment.type }
+        : undefined,
+    });
     return { response };
   } catch (e: any) {
     console.error('[AI_ERROR]', e);

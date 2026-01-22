@@ -9,12 +9,16 @@ import { Bot } from 'lucide-react';
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
+  attachment?: {
+    name: string;
+    type: string;
+  };
 }
 
 interface ChatViewProps {
   messages: Message[];
   isResponding: boolean;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, attachment?: File) => void;
 }
 
 export function ChatView({
