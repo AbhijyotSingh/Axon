@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { SendHorizontal, Paperclip, X } from 'lucide-react';
+import { SendHorizontal, Paperclip, X, Mic } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   onSendMessage: (content: string, attachment?: File) => void;
@@ -15,6 +16,7 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isListening, setIsListening] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
@@ -50,6 +52,40 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
     }
   };
 
+  const handleVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Voice recognition is not supported by your browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue(prev => prev ? `${prev} ${transcript}` : transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+      alert(`Speech recognition error: ${event.error}. Please ensure microphone access is allowed.`);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   return (
     <div className="flex flex-col gap-2 w-full">
        {attachment && (
@@ -71,8 +107,8 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={attachment ? 'Add a comment to your file...' : 'Ask a question or start a new topic...'}
-          className="w-full resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-0 h-12 pr-24"
+          placeholder={isListening ? "Listening..." : (attachment ? 'Add a comment to your file...' : 'Ask a question or start a new topic...')}
+          className="w-full resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-0 h-12 pr-36"
           rows={1}
           disabled={isResponding}
           aria-label="Chat input"
@@ -90,16 +126,30 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isResponding}
+              disabled={isResponding || isListening}
               aria-label="Attach file"
               className="h-9 w-9 shrink-0 rounded-full"
             >
               <Paperclip className="h-5 w-5" />
             </Button>
             <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleVoiceInput}
+              disabled={isResponding || isListening}
+              aria-label="Use microphone"
+              className={cn(
+                "h-9 w-9 shrink-0 rounded-full",
+                isListening && "bg-destructive/20 text-destructive"
+              )}
+            >
+              <Mic className={cn("h-5 w-5", isListening && "animate-pulse")} />
+            </Button>
+            <Button
               type="submit"
               size="icon"
-              disabled={(!inputValue.trim() && !attachment) || isResponding}
+              disabled={(!inputValue.trim() && !attachment) || isResponding || isListening}
               className="rounded-full bg-primary hover:bg-primary/90 h-9 w-9 shrink-0"
               aria-label="Send message"
             >
