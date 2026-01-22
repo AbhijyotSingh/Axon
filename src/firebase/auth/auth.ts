@@ -9,16 +9,19 @@ import { doc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
-export async function signUpWithEmail(
+// This is a placeholder domain. In a production app, you would use your own.
+const EMAIL_DOMAIN = 'study-buddy.app';
+
+
+export async function signUpWithUsername(
   auth: Auth,
   firestore: Firestore,
-  email: string,
+  username: string,
   password: string
 ) {
+    const email = `${username.toLowerCase()}@${EMAIL_DOMAIN}`;
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-
-    const username = user.email?.split('@')[0] || 'user';
 
     const userProfileData = {
         username: username,
@@ -39,7 +42,8 @@ export async function signUpWithEmail(
     return userCredential;
 }
 
-export async function signInWithEmail(auth: Auth, email: string, password: string) {
+export async function signInWithUsername(auth: Auth, username: string, password: string) {
+    const email = `${username.toLowerCase()}@${EMAIL_DOMAIN}`;
     return signInWithEmailAndPassword(auth, email, password);
 }
 
