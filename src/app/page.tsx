@@ -11,23 +11,39 @@ import { UsernameForm } from '@/components/common/username-form';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
+// A simple, insecure, mock user database stored in local storage.
+// DO NOT use this in production.
+const getMockUserDb = () => {
+  if (typeof window === 'undefined') return {};
+  const db = localStorage.getItem('mock_user_db');
+  return db ? JSON.parse(db) : {};
+};
+
+const saveMockUserDb = (db: any) => {
+  localStorage.setItem('mock_user_db', JSON.stringify(db));
+};
+
+
 export default function Home() {
-  const [username, setUsername] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ username: string } | null>(null);
   const [isResponding, setIsResponding] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem('chat_username');
-    if (storedUsername) {
-      handleSetUsername(storedUsername);
+    // Check if user is logged in on component mount
+    const storedUser = localStorage.getItem('current_user');
+    if (storedUser) {
+        const user = JSON.parse(storedUser);
+        loginUser(user.username);
     }
   }, []);
 
   useEffect(() => {
-    if (username && messages.length > 0) {
+    // Save chat history whenever messages or the current user changes
+    if (currentUser?.username && messages.length > 0) {
       try {
-        localStorage.setItem(`chat_history_${username}`, JSON.stringify(messages));
+        localStorage.setItem(`chat_history_${currentUser.username}`, JSON.stringify(messages));
       } catch (error) {
         console.error("Failed to save messages to localStorage:", error);
         toast({
@@ -37,12 +53,14 @@ export default function Home() {
         });
       }
     }
-  }, [messages, username, toast]);
+  }, [messages, currentUser, toast]);
 
-  const handleSetUsername = (newUsername: string) => {
-    const sanitizedUsername = newUsername.trim();
-    setUsername(sanitizedUsername);
-    localStorage.setItem('chat_username', sanitizedUsername);
+  const loginUser = (username: string) => {
+    const sanitizedUsername = username.trim();
+    setCurrentUser({ username: sanitizedUsername });
+    localStorage.setItem('current_user', JSON.stringify({ username: sanitizedUsername }));
+
+    // Load user's chat history
     const savedMessages = localStorage.getItem(`chat_history_${sanitizedUsername}`);
     if (savedMessages) {
       setMessages(JSON.parse(savedMessages));
@@ -50,18 +68,36 @@ export default function Home() {
       setMessages([
         {
           role: 'assistant',
-          content: `Hi ${sanitizedUsername}! What would you like to learn about today?`,
+          content: `Hi ${sanitizedUsername}! Welcome back. What would you like to learn about today?`,
         },
       ]);
     }
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('chat_username');
-    if (username) {
-        localStorage.removeItem(`chat_history_${username}`);
+  const handleLogin = (username: string, password: string) => {
+    const db = getMockUserDb();
+    const userRecord = db[username];
+
+    if (userRecord) {
+      // User exists, check password
+      if (userRecord.password === password) {
+        toast({ title: "Login Successful", description: `Welcome back, ${username}!` });
+        loginUser(username);
+      } else {
+        toast({ variant: 'destructive', title: 'Login Failed', description: 'Incorrect password.' });
+      }
+    } else {
+      // User does not exist, register them
+      db[username] = { password };
+      saveMockUserDb(db);
+      toast({ title: "Registration Successful", description: `Welcome, ${username}! Your account has been created.` });
+      loginUser(username);
     }
-    setUsername(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('current_user');
+    setCurrentUser(null);
     setMessages([]);
   };
 
@@ -74,7 +110,7 @@ export default function Home() {
       const isFirstAssistantMessage =
         index === 0 &&
         msg.role === 'assistant' &&
-        msg.content.startsWith('Hi ');
+        (msg.content.startsWith('Hi ') || msg.content.startsWith('Welcome back'));
       return !isFirstAssistantMessage;
     });
 
@@ -97,7 +133,7 @@ export default function Home() {
     }
   };
 
-  if (!username) {
+  if (!currentUser) {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 md:p-8 bg-background">
             <div className='absolute top-4 right-4'>
@@ -112,7 +148,7 @@ export default function Home() {
                 </div>
             </header>
             <main className="w-full max-w-xs">
-                <UsernameForm onSetUsername={handleSetUsername} />
+                <UsernameForm onLogin={handleLogin} />
             </main>
       </div>
     )
@@ -128,7 +164,7 @@ export default function Home() {
                 <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
                     AI Study Buddy
                 </h1>
-                <p className="text-sm text-muted-foreground">Welcome, {username}!</p>
+                <p className="text-sm text-muted-foreground">Welcome, {currentUser.username}!</p>
             </div>
 
           </div>
