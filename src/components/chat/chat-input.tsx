@@ -51,7 +51,7 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full">
        {attachment && (
         <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-2 text-sm">
           <div className="flex items-center gap-2 overflow-hidden">
@@ -65,45 +65,47 @@ export function ChatInput({ onSendMessage, isResponding }: ChatInputProps) {
       )}
       <form
         onSubmit={handleSubmit}
-        className="flex w-full items-center gap-2"
+        className="relative w-full"
       >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept="image/*,application/pdf,.txt,.md"
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isResponding}
-          aria-label="Attach file"
-          className="h-12 w-12 shrink-0 rounded-full"
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
         <Textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={attachment ? 'Add a comment to your file...' : 'Ask a question or start a new topic...'}
-          className="flex-1 resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-0 h-12"
+          className="w-full resize-none rounded-2xl border-input bg-card py-3 px-4 shadow-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-0 h-12 pr-24"
           rows={1}
           disabled={isResponding}
           aria-label="Chat input"
         />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={(!inputValue.trim() && !attachment) || isResponding}
-          className="rounded-full bg-primary hover:bg-primary/90 h-12 w-12 shrink-0"
-          aria-label="Send message"
-        >
-          <SendHorizontal className="h-5 w-5" />
-        </Button>
+         <div className="absolute top-1/2 right-2.5 -translate-y-1/2 flex items-center gap-1">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*,application/pdf,.txt,.md"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isResponding}
+              aria-label="Attach file"
+              className="h-9 w-9 shrink-0 rounded-full"
+            >
+              <Paperclip className="h-5 w-5" />
+            </Button>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={(!inputValue.trim() && !attachment) || isResponding}
+              className="rounded-full bg-primary hover:bg-primary/90 h-9 w-9 shrink-0"
+              aria-label="Send message"
+            >
+              <SendHorizontal className="h-5 w-5" />
+            </Button>
+        </div>
       </form>
     </div>
   );
