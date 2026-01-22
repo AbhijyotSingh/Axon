@@ -68,7 +68,7 @@ export default function Home() {
       });
       return () => unsubscribe();
     }
-  }, [user, firestore]);
+  }, [user, firestore, activeChatId]);
 
   const handleLogout = async () => {
     try {
@@ -82,9 +82,11 @@ export default function Home() {
   
   const handleNewChat = async () => {
     if (!user || !firestore) return;
-    createChatSession(firestore, user.uid);
-    setMessages([{ role: 'assistant', content: "Hi there! What would you like to learn about today?" }]);
-    setActiveChatId(null); 
+    const newChatId = await createChatSession(firestore, user.uid);
+    if(newChatId) {
+      setActiveChatId(newChatId);
+      setMessages([{ role: 'assistant', content: "Hi there! What would you like to learn about today?" }]);
+    }
   }
   
   const handleSelectChat = (chatId: string) => {
@@ -97,38 +99,56 @@ export default function Home() {
 
   const handleSendMessage = async (content: string) => {
     if (!activeChatId || !user || !firestore) {
-        toast({ variant: 'destructive', title: 'Error', description: 'No active chat session.' });
+        // If there's no active chat, create one first.
+        if (user && firestore) {
+          const newId = await createChatSession(firestore, user.uid);
+          if (newId) {
+            setActiveChatId(newId);
+            const newMessages: Message[] = [{ role: 'user', content }];
+            setMessages(newMessages);
+            setIsResponding(true);
+            // Now call generate response and update logic
+            await continueSendingMessage(content, newId, newMessages);
+          }
+        } else {
+          toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to start a chat.' });
+        }
         return;
     }
 
     const newMessages: Message[] = [...messages, { role: 'user', content }];
     setMessages(newMessages);
     setIsResponding(true);
-
-    const historyForAi = newMessages.filter((msg, index) => {
-        const isFirstAssistantMessage = index === 0 && msg.role === 'assistant';
-        return !isFirstAssistantMessage;
-    });
-
-    const result = await generateResponse(historyForAi);
-
-    setIsResponding(false);
-
-    if (result.error) {
-      toast({
-        variant: 'destructive',
-        title: 'An error occurred',
-        description: result.error,
-      });
-    } else if (result.response) {
-      const finalMessages = [
-        ...newMessages,
-        { role: 'assistant', content: result.response },
-      ];
-      setMessages(finalMessages);
-      updateChatSession(firestore, user.uid, activeChatId, finalMessages);
-    }
+    await continueSendingMessage(content, activeChatId, newMessages);
   };
+  
+  const continueSendingMessage = async (content: string, chatId: string, currentMessages: Message[]) => {
+     if (!user || !firestore) return;
+
+      const historyForAi = currentMessages.filter((msg, index) => {
+          const isFirstAssistantMessage = index === 0 && msg.role === 'assistant';
+          return !isFirstAssistantMessage;
+      });
+  
+      const result = await generateResponse(historyForAi);
+  
+      setIsResponding(false);
+  
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'An error occurred',
+          description: result.error,
+        });
+      } else if (result.response) {
+        const finalMessages = [
+          ...currentMessages,
+          { role: 'assistant', content: result.response },
+        ];
+        setMessages(finalMessages);
+        updateChatSession(firestore, user.uid, chatId, finalMessages);
+      }
+  }
 
   if (isUserLoading || !user) {
     return (
@@ -138,7 +158,7 @@ export default function Home() {
       );
   }
 
-  const userEmail = user.email || 'User';
+  const username = (user.email && user.email.split('@')[0]) || 'User';
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 md:p-8">
@@ -157,7 +177,7 @@ export default function Home() {
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback>
-                      {userEmail.charAt(0).toUpperCase()}
+                      {username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -165,7 +185,7 @@ export default function Home() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{userEmail}</p>
+                    <p className="text-sm font-medium leading-none">{username}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       Logged in
                     </p>

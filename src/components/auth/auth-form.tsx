@@ -26,14 +26,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInWithEmail, signUpWithEmail } from '@/firebase/auth/auth';
 
+const usernameSchema = z.string().min(3, 'Username must be at least 3 characters.').max(20, 'Username must be 20 characters or less.');
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address.'),
+  username: usernameSchema,
   password: z.string().min(6, 'Password must be at least 6 characters.'),
 });
 
 const registerSchema = z.object({
-    email: z.string().email('Invalid email address.'),
+    username: usernameSchema,
     password: z.string().min(6, 'Password must be at least 6 characters.'),
     confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -51,23 +52,24 @@ export function AuthForm() {
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { username: '', password: '' },
   });
 
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', confirmPassword: ''},
+    defaultValues: { username: '', password: '', confirmPassword: ''},
   });
 
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true);
     try {
       if (!auth) throw new Error("Auth service not available");
-      await signInWithEmail(auth, data.email, data.password);
+      const email = `${data.username.toLowerCase()}@studybuddy.local`;
+      await signInWithEmail(auth, email, data.password);
       toast({ title: 'Login Successful!' });
       router.push('/');
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
+      toast({ variant: 'destructive', title: 'Login Failed', description: "Invalid username or password." });
     } finally {
       setIsSubmitting(false);
     }
@@ -77,11 +79,16 @@ export function AuthForm() {
     setIsSubmitting(true);
     try {
         if (!auth || !firestore) throw new Error("Firebase services not available");
-        await signUpWithEmail(auth, firestore, data.email, data.password);
+        const email = `${data.username.toLowerCase()}@studybuddy.local`;
+        await signUpWithEmail(auth, firestore, email, data.password);
         toast({ title: 'Registration Successful!' });
         router.push('/');
     } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Registration Failed', description: error.message });
+        let message = error.message;
+        if (error.code === 'auth/email-already-in-use') {
+            message = 'This username is already taken. Please choose another one.';
+        }
+        toast({ variant: 'destructive', title: 'Registration Failed', description: message });
     } finally {
         setIsSubmitting(false);
     }
@@ -98,10 +105,10 @@ export function AuthForm() {
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
                     <CardContent className="space-y-4 pt-6">
-                        <FormField control={loginForm.control} name="email" render={({ field }) => (
+                        <FormField control={loginForm.control} name="username" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl><Input placeholder="your-username" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -127,10 +134,10 @@ export function AuthForm() {
             <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
                     <CardContent className="space-y-4 pt-6">
-                         <FormField control={registerForm.control} name="email" render={({ field }) => (
+                         <FormField control={registerForm.control} name="username" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl><Input placeholder="your-username" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

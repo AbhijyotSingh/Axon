@@ -22,7 +22,7 @@ export type ChatSession = {
   updatedAt: any;
 };
 
-export function createChatSession(firestore: Firestore, userId: string) {
+export async function createChatSession(firestore: Firestore, userId: string): Promise<string | undefined> {
     const newChatData = {
         userId: userId,
         history: [],
@@ -31,14 +31,18 @@ export function createChatSession(firestore: Firestore, userId: string) {
     };
     const collectionRef = collection(firestore, `users/${userId}/chats`);
     
-    addDoc(collectionRef, newChatData).catch(async (serverError) => {
+    try {
+        const docRef = await addDoc(collectionRef, newChatData);
+        return docRef.id;
+    } catch (serverError) {
         const permissionError = new FirestorePermissionError({
             path: collectionRef.path,
             operation: 'create',
             requestResourceData: newChatData,
         });
         errorEmitter.emit('permission-error', permissionError);
-    });
+        return undefined;
+    }
 }
 
 export function updateChatSession(

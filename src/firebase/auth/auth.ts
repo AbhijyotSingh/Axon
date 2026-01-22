@@ -18,8 +18,10 @@ export async function signUpWithEmail(
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    const username = user.email?.split('@')[0] || 'user';
+
     const userProfileData = {
-        email: user.email,
+        username: username,
         createdAt: serverTimestamp(),
     };
 

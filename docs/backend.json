@@ -5,10 +5,9 @@
       "description": "Represents a user's profile in the application.",
       "type": "object",
       "properties": {
-        "email": {
+        "username": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
+          "description": "The user's unique username."
         },
         "createdAt": {
           "type": "string",
@@ -16,7 +15,7 @@
           "description": "The timestamp when the user profile was created."
         }
       },
-      "required": ["email", "createdAt"]
+      "required": ["username", "createdAt"]
     },
     "ChatSession": {
         "title": "Chat Session",
