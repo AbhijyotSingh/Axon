@@ -175,7 +175,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 md:p-8 bg-gradient-to-b from-background via-secondary to-background">
-      <header className="w-full max-w-4xl mb-8">
+      <header className="w-full max-w-6xl mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Logo />
@@ -197,7 +197,7 @@ export default function Home() {
         </div>
       </header>
       <main className="w-full flex-1 flex flex-col items-center mt-4">
-        <div className="w-full max-w-4xl flex-1">
+        <div className="w-full max-w-6xl flex-1">
           <ChatView
             messages={messages}
             isResponding={isResponding}
