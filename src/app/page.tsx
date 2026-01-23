@@ -108,73 +108,66 @@ export default function Home() {
   };
 
   const handleSendMessage = async (content: string, attachment?: File) => {
-    setIsResponding(true);
+  setIsResponding(true);
 
-    const userMessage: Message = { role: 'user', content };
-    let attachmentPayload: {dataUri: string; type: string; name: string} | undefined;
+  const userMessage: Message = { role: 'user', content };
+  let attachmentPayload: {dataUri: string; type: string; name: string} | undefined;
 
-    if (attachment) {
-      userMessage.attachment = { name: attachment.name, type: attachment.type };
-      // Read file as data URI to send to backend
-      const dataUri = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target?.result as string);
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(attachment);
-      });
-      attachmentPayload = { dataUri, type: attachment.type, name: attachment.name };
-    }
+  if (attachment) {
+    userMessage.attachment = { name: attachment.name, type: attachment.type };
+    const dataUri = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target?.result as string);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(attachment);
+    });
+    attachmentPayload = { dataUri, type: attachment.type, name: attachment.name };
+  }
 
-    const newMessages: Message[] = [...messages, userMessage];
-    setMessages(newMessages);
+  const newMessages: Message[] = [...messages, userMessage];
+  setMessages(newMessages);
 
-    const historyForAi = newMessages
-      .filter((msg, index) => {
-        const isFirstAssistantMessage =
-          index === 0 &&
-          msg.role === 'assistant' &&
-          (msg.content.startsWith('Hi ') || msg.content.startsWith('Welcome back'));
-        return !isFirstAssistantMessage;
-      })
-      .map(msg => ({ role: msg.role, content: msg.content })); // Important: strip attachment from history for AI flow
-
-    let result;
+  const historyForAi = newMessages
+    .filter((msg, index) => {
+      const isFirstAssistantMessage =
+        index === 0 &&
+        msg.role === 'assistant' &&
+        (msg.content.startsWith('Hi ') || msg.content.startsWith('Welcome back'));
+      return !isFirstAssistantMessage;
+    })
+    .map(msg => ({ role: msg.role, content: msg.content }));
 
   try {
-    result = await generateResponse(historyForAi, attachmentPayload);
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: historyForAi, attachment: attachmentPayload }),
+    });
+
+    const data = await res.json();
+
+    setIsResponding(false);
+
+    if (data.error) {
+      toast({
+        variant: 'destructive',
+        title: 'AI Error',
+        description: data.error,
+      });
+    } else {
+      setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
+    }
   } catch (err) {
     console.error(err);
-    result = { error: 'AI request failed on server.' };
-  }
-
-  setIsResponding(false);
-
-  if (!result || typeof result !== 'object') {
+    setIsResponding(false);
     toast({
       variant: 'destructive',
-      title: 'Unexpected error',
-      description: 'Invalid response from AI service.',
+      title: 'AI Error',
+      description: 'Server request failed.',
     });
-    return;
   }
+};
 
-  if (result.error) {
-    toast({
-      variant: 'destructive',
-      title: 'An error occurred',
-      description: result.error,
-    });
-    return;
-  }
-
-  if (typeof result.response === 'string') {
-    setMessages([
-      ...newMessages,
-      { role: 'assistant', content: result.response },
-    ]);
-  }
-
-  };
 
   if (!currentUser) {
     return (
