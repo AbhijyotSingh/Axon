@@ -9,7 +9,12 @@ export async function POST(req: Request) {
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
-    const result = await model.generateContent(messages);
+    const geminiMessages = messages.map((msg: any) => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }],
+}));
+
+const result = await model.generateContent(geminiMessages);
 
     return NextResponse.json({ reply: result.response.text() });
   } catch (error) {
