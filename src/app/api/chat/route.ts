@@ -14,7 +14,9 @@ export async function POST(req: Request) {
     parts: [{ text: msg.content }],
 }));
 
-const result = await model.generateContent(geminiMessages);
+const result = await model.generateContent({
+  contents: geminiMessages,
+});
 
     return NextResponse.json({ reply: result.response.text() });
   } catch (error) {
