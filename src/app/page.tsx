@@ -1,3 +1,4 @@
+// DEPLOY CHECK – IGNORE
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -137,23 +138,42 @@ export default function Home() {
       })
       .map(msg => ({ role: msg.role, content: msg.content })); // Important: strip attachment from history for AI flow
 
-    const result = await generateResponse(historyForAi, attachmentPayload);
+    let result;
 
-    setIsResponding(false);
+  try {
+    result = await generateResponse(historyForAi, attachmentPayload);
+  } catch (err) {
+    console.error(err);
+    result = { error: 'AI request failed on server.' };
+  }
 
-    if (result.error) {
-      toast({
-        variant: 'destructive',
-        title: 'An error occurred',
-        description: result.error,
-      });
-    } else if (result.response) {
-      const finalMessages = [
-        ...newMessages,
-        { role: 'assistant', content: result.response },
-      ];
-      setMessages(finalMessages);
-    }
+  setIsResponding(false);
+
+  if (!result || typeof result !== 'object') {
+    toast({
+      variant: 'destructive',
+      title: 'Unexpected error',
+      description: 'Invalid response from AI service.',
+    });
+    return;
+  }
+
+  if (result.error) {
+    toast({
+      variant: 'destructive',
+      title: 'An error occurred',
+      description: result.error,
+    });
+    return;
+  }
+
+  if (typeof result.response === 'string') {
+    setMessages([
+      ...newMessages,
+      { role: 'assistant', content: result.response },
+    ]);
+  }
+
   };
 
   if (!currentUser) {
